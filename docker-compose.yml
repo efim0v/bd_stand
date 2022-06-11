@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:latest
+    volumes:
+      - ./schema/postgres:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=stand
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=default-postgres-password
+    ports:
+      - "5432:5432"
+    networks:
+      - standnetwork
+  server:
+    environment:
+      - POSTGRES_USERNAME=postgres
+      - POSTGRES_PASSWORD=default-postgres-password
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_KEYSPACE=stand
+
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - postgres
+    volumes:
+      - ./build/libs/dbstand-0.0.1-SNAPSHOT.jar:/app.jar
+    ports:
+      - "8080:8080"
+    networks:
+      - standnetwork
+volumes:
+  postgres_data:
+networks:
+  standnetwork:
+    driver: bridge
